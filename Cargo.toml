@@ -1,0 +1,18 @@
+[package]
+name = "noer"
+version = "0.1.0"
+edition = "2018"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+log = "0.4"
+wasm-logger = "0.2"
+yew = { git = "https://github.com/yewstack/yew.git", package="yew", features=["tokio"], version="0.19.3"}
+yew-router = { git = "https://github.com/yewstack/yew.git", package="yew-router", version="0.16.0"}
+serde = { version = "1.0", features = ["derive"] }
+regex = "1.5.4"
+pulldown-cmark = "0.9.1"
+wasm-bindgen = "0.2.79"
+wasm-bindgen-futures = "0.4.29"
+js-sys = "0.3.56"
+web-sys = { version = "0.3.56", features = ["Window", "Response",  "DomParser", "SupportedType", "HtmlCollection", "Storage"] }
