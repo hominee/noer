@@ -90,7 +90,6 @@ impl BlogMeta {
                 meta.get_hash();
                 meta.image_url();
 
-                log::debug!("time items: {:?}, its sum: {}", time_items, sum);
                 return Some(meta);
             } else {
                 log::error!("file name is not valid: {:?}", path);
@@ -104,17 +103,14 @@ impl BlogMeta {
 
     pub fn image_url(&mut self) {
         static mut DELTA: u16 = 0;
-        log::trace!("generating image url");
         let mut now = js_sys::Date::now() * 1000.0;
         unsafe { now += DELTA as f64 };
-        log::trace!("now is: {}", now);
         let cache_buster = (now as u64 % u16::MAX as u64) as u16;
         log::trace!("cache_buster is: {}", cache_buster);
         self.hero = format!(
             "https://source.unsplash.com/random/600x300&sig={}",
             cache_buster
         );
-        log::trace!("here url: {}", self.hero);
         unsafe {
             DELTA += 1;
         }
@@ -164,7 +160,6 @@ impl Blog {
                 .zip(time_items.iter())
                 .fold(0, |acc, (e1, e2)| acc + e1 * e2);
             self.meta.timestamp = sum;
-            log::debug!("time items: {:?}, its sum: {}", time_items, sum);
         } else {
             // path is not matched but pre-defined
             // try get it from meta data in pre-defined info
@@ -186,7 +181,6 @@ impl Blog {
                             .iter()
                             .zip(time_items.iter())
                             .fold(0, |acc, (e1, e2)| acc + e1 * e2);
-                        log::debug!("time items: {:?}, its sum: {}", time_items, sum);
                         self.meta.timestamp = sum;
                     }
                 }

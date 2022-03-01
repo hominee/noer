@@ -1,8 +1,15 @@
 #![allow(dead_code)]
-pub const ITEMS_PER_PAGE: u64 = 12;
 
-// github pages
-pub const USE_GITPAGE: bool = false;
+pub enum Modes {
+    Development(log::Level),
+    Release,
+}
+
+pub const ITEMS_PER_PAGE: u64 = 12;
+pub const MODE: Modes = Modes::Development(log::Level::Trace);
+
+// the Default value
+//pub const SUBPATH: &str = "/";
 pub const SUBPATH: &str = "demo/";
 
 // site info

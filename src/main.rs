@@ -17,7 +17,7 @@ use yew::html::Scope;
 
 #[derive(Routable, PartialEq, Clone, Debug)]
 pub enum Route {
-    #[at("/:id/:title")]
+    #[at("/posts/:id/:title")]
     Post { id: u64, title: String },
     #[at("/")]
     Home,
@@ -43,12 +43,10 @@ pub fn app() -> Html {
 pub enum Msg {
     LoadBlogMeta,
     Ready,
-    Notified,
 }
 
 pub struct Model {
     state: FetchState<()>,
-    notified: bool,
 }
 impl Component for Model {
     type Message = Msg;
@@ -64,7 +62,6 @@ impl Component for Model {
         }
         Self {
             state: FetchState::NotFetching,
-            notified: false,
         }
     }
 
@@ -74,10 +71,6 @@ impl Component for Model {
             .context::<ParseActContext>(Callback::noop())
             .expect("Parser Context not found");
         match msg {
-            Msg::Notified => {
-                self.notified = true;
-                true
-            }
             Msg::Ready => {
                 self.state = FetchState::Success(());
                 true
@@ -96,58 +89,7 @@ impl Component for Model {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let onclick = ctx.link().callback(|_| Msg::Notified);
         match self.state {
-            FetchState::NotFetching => html! {
-                <>
-                        { self.view_nav(ctx.link()) }
-                { if !self.notified  {
-                     html!{
-                        <div class="container mt-24 notification is-light">
-                            <button class="delete" {onclick}> </button>
-                            <br />
-                            <strong class="content is-large">{ " Blogs Not Fetched" }</strong>
-                            <br />
-                        </div>
-                     }
-                } else {
-                    html!{}
-                }
-                }
-                </>
-            },
-            FetchState::Fetching => html! {
-                <>
-                        { self.view_nav(ctx.link()) }
-                { if !self.notified {
-                    html!{
-                        <div class="container mt-24 notification is-info">
-                            <button class="delete" {onclick}> </button>
-                            <br />
-                            <strong class="content is-large">{ "Loading Blog " }</strong>
-                            <br />
-                        </div>
-                    }
-                   } else {
-                       html! {}
-                 }
-                }
-                </>
-            },
-            FetchState::Failed(_) => html! {
-                <>
-                { self.view_nav(ctx.link()) }
-                { if !self.notified {
-                   html!{
-                    <div class="container mt-24 notification is-danger">
-                        <button class="delete" {onclick}> </button>
-                        <br />
-                        <strong class="is-large">{ " Blog Loaded Failed" }</strong>
-                    </div>
-               } } else { html!{} }
-                }
-                </>
-            },
             FetchState::Success(_) => {
                 html! {
                     <BrowserRouter>
@@ -161,9 +103,14 @@ impl Component for Model {
                               { constant::SITE_DESCRIPTION }
                             </div>
                         </footer>
-                        </BrowserRouter>
+                    </BrowserRouter>
                 }
             }
+            _ => html! {
+                <>
+                { self.view_nav(ctx.link()) }
+                </>
+            },
         }
     }
 }
@@ -205,28 +152,39 @@ impl Model {
     }
 
     fn view_nav(&self, _link: &Scope<Self>) -> Html {
+        let href = format!("/{}/", constant::SUBPATH.replace("/", ""));
+        let logo = format!(
+            "/{}/{}",
+            constant::SUBPATH.replace("/", ""),
+            constant::LOGO_PIC
+        );
+        let avatar = format!(
+            "/{}/{}",
+            constant::SUBPATH.replace("/", ""),
+            constant::AVATR_PIC
+        );
         html! {
             <nav class="navbar" role="navigation" aria-label="main navigation">
                 <div class="navbar-brand">
-                    <a class="navbar-item" href="/">
+                    <a class="navbar-item" href={href.clone()}>
                     <h1 class="navbar-item is-size-3">{ constant::SITE_NAME }</h1>
                     </a>
-                    <a class="navbar-item" href="/">
+                    <a class="navbar-item" href={href.clone()}>
                         <figure class="image is-rounded pr-3">
-                            <img src={constant::LOGO_PIC} class="image"/>
+                            <img src={logo} class="image"/>
                         </figure>
                     </a>
                 </div>
                 <div class="navbar-end">
                     <div class="navbar-item" >
                     <div class="field is-grouped">
-                        <a  href="/">
+                        <a  href={href.clone()}>
                             <figure class="image is-rounded pr-3">
-                                <img style="width:auto;" src={ constant::AVATR_PIC} />
+                                <img style="width:auto;" src={avatar} />
                             </figure>
                         </a>
                         <div class="navbar-item has-dropdown is-hoverable">
-                        <a class="title is-5" href="/">
+                        <a class="title is-5" href={href}>
                             { constant::ADMIN }
                         </a>
                           { self.view_user_info() }
@@ -254,7 +212,12 @@ fn switch(routes: &Route) -> Html {
 }
 
 fn main() {
-    wasm_logger::init(wasm_logger::Config::new(log::Level::Trace));
-    log::debug!("before parse");
+    // set logger depends on the logger filter
+    match constant::MODE {
+        constant::Modes::Release => {}
+        constant::Modes::Development(level) => {
+            wasm_logger::init(wasm_logger::Config::new(level));
+        }
+    }
     yew::start_app::<App>();
 }

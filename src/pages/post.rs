@@ -24,7 +24,7 @@ pub async fn read_file(path: &str) -> Result<String, FetchError> {
         .to_string();
     let mut url = format!("{}//{}/", protocol, host,);
     use crate::constant;
-    if constant::USE_GITPAGE {
+    if constant::SUBPATH != "/" {
         url.push_str(constant::SUBPATH);
     }
     url.push_str(path);
@@ -184,9 +184,7 @@ impl Component for Post {
                     }
                 }
             }
-            FetchState::Fetching => html! {
-               <button class="is-loading is-inverted is-large"> {"Loading"} </button>
-            },
+            FetchState::Fetching => html! {},
             FetchState::Success(blog) => {
                 let keywords = blog
                     .tags
@@ -195,7 +193,7 @@ impl Component for Post {
                 html! {
                     <>
                         <section class="hero is-medium is-light has-background">
-                            <img alt="The hero's background" class="hero-background is-transparent" src={blog.meta.hero.clone()} />
+                            <img alt="The post's background" class="hero-background is-transparent" src={blog.meta.hero.clone()} />
                             <div class="hero-body">
                                 <div class="content">
                                     <h1 class="title">

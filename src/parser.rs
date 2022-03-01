@@ -14,7 +14,7 @@ pub async fn read_dir() -> Vec<String> {
     use crate::constant;
     use wasm_bindgen_futures::JsFuture;
     log::trace!("{}", &format!("read dir",));
-    let dir = if constant::USE_GITPAGE {
+    let dir = if constant::SUBPATH != "/" {
         format!("{}{}", constant::SUBPATH, "posts/")
     } else {
         "posts/".into()
@@ -50,25 +50,14 @@ pub async fn read_dir() -> Vec<String> {
         .map(|e| e.trim().to_string())
         .filter(|e| e.len() != 0 && e.ends_with("rmd"))
         .collect()
-    /*
-     *iter.map(|e| BlogMeta::with_path(&e))
-     *    .filter(|e| e.is_some())
-     *    .for_each(|e| {
-     *        let item = e.unwrap();
-     *        self.ids.push(item.id);
-     *        self.metas.insert(item.id, item);
-     *    });
-     *self.order();
-     */
 }
 
 pub fn str2blog(s: &str, meta: &BlogMeta) -> Option<Blog> {
     log::trace!("parsing a string into a blog");
     let sp = s.splitn(3, "---").collect::<Vec<_>>();
-    //println!("meta: {:?}, ", sp);
     let metadata = sp[1].trim();
     let cont = sp[2]
-        .splitn(2, "<!–-break-–>")
+        .splitn(2, "<!--break-->")
         .map(|e| e.trim().to_owned())
         .collect::<Vec<String>>();
     let pat = regex::Regex::new(r"(?P<key>\w+)\s*:\s*(?P<value>.*?$)").unwrap();
@@ -91,7 +80,6 @@ pub fn str2blog(s: &str, meta: &BlogMeta) -> Option<Blog> {
             let key = caps.name("key").map_or("", |e| e.as_str());
             lastkey = key;
             let value = caps.name("value").map_or("", |e| e.as_str());
-            //println!("key: {}, val: {}", key, value);
             if key == "tags" {
                 lastkey = key;
             } else {
@@ -102,7 +90,6 @@ pub fn str2blog(s: &str, meta: &BlogMeta) -> Option<Blog> {
         if let Some(caps) = pat_tag.captures(line) {
             if let Some(tag) = caps.name("tag") {
                 let tag = tag.as_str().trim().to_owned();
-                //println!("tag: {}", tag);
                 tags.push(tag);
                 continue;
             }
@@ -111,13 +98,11 @@ pub fn str2blog(s: &str, meta: &BlogMeta) -> Option<Blog> {
             let ln = caps.name("ln").unwrap().as_str().trim();
             if let Some(item) = map.get_mut(&lastkey) {
                 item.push_str(ln);
-                //println!("lastkey: {:?}, line: {:?}, map: {:?}", lastkey, ln, map);
             } else {
                 log::debug!("Line ingnored: {}", ln);
             }
         }
     }
-    //println!("tags: {:?}, map: {:?}", tags, map);
     if map.get(&"title").is_none() {
         log::error!("Title Missing for {:?}", meta.path);
         return None;
@@ -129,8 +114,6 @@ pub fn str2blog(s: &str, meta: &BlogMeta) -> Option<Blog> {
     let mut blog = Blog {
         meta: meta.clone(),
         tags,
-        //hero: map.remove("hero"),
-        //hero: Some("https://source.unsplash.com/random/1200x400/?yew".into()),
         content: cont,
         published: map
             .remove("published")
@@ -187,7 +170,6 @@ impl InnerParser {
     }
 }
 
-//const KEYWORDSY: [&str; 5] = ["title", "description", "tags", "hero", "published"];
 /// it represents a `Parser` that parse all markdown file of directory
 #[derive(Clone, Default, Debug, PartialEq, Properties)]
 pub struct Parser {
@@ -267,7 +249,6 @@ impl Parser {
         let len = self.paths.len() as u64;
         let num = len / ITEMS_PER_PAGE;
         let remainder = len - ITEMS_PER_PAGE * num;
-        log::trace!("paths len: {}, num: {}, remainder: {}", len, num, remainder);
         match remainder as u64 {
             0 => num,
             _ => num + 1,
@@ -279,7 +260,6 @@ impl Parser {
         let len = self.ids.len() as u64;
         let num = len / ITEMS_PER_PAGE;
         let remainder = len - ITEMS_PER_PAGE * num;
-        log::trace!("paths len: {}, num: {}, remainder: {}", len, num, remainder);
         match remainder as u64 {
             0 => num,
             _ => num + 1,
@@ -347,7 +327,6 @@ impl Parser {
                     cnt += 1;
                     if !buf.is_empty() {
                         // parse the string to Blog
-                        log::debug!("parsing file: {:?}", meta.path);
                         let blog = str2blog(&buf, meta);
                         if let Some(Blog { ignored: false, .. }) = blog {
                             let blog = blog.unwrap();

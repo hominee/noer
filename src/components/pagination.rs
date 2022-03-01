@@ -41,7 +41,7 @@ impl Component for Pagination {
         } else {
             html! {
                 <>
-                <nav class="pagination is-right" role="navigation" aria-label="pagination">
+                <nav class="pagination is-centered" role="navigation" aria-label="pagination">
                     { self.view_relnav_buttons(ctx.props()) }
                     <ul class="pagination-list">
                         { self.view_links(ctx.props()) }
@@ -136,7 +136,7 @@ impl Pagination {
                     query={Some(PageQuery{page: page - 1})}
                     to={to.clone()}
                 >
-                    { "Previous" }
+                    { "<<" }
                 </Link<Route, PageQuery>>
                 <Link<Route, PageQuery>
                     classes={classes!("pagination-next")}
@@ -144,7 +144,7 @@ impl Pagination {
                     query={Some(PageQuery{page: page + 1})}
                     {to}
                 >
-                    { "Next page" }
+                    { ">>" }
                 </Link<Route, PageQuery>>
             </>
         }
