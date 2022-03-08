@@ -150,6 +150,7 @@ pub enum ParseAct {
     CacheBlog(Blog),
     MoreBlogMeta,
     BlogPath(Vec<String>),
+    ChangeDisplayMode,
 }
 
 /// the inner data of Parser
@@ -180,6 +181,7 @@ pub struct Parser {
     inner: InnerParser,
     pub order: Order,
     pub parsed: bool,
+    pub display: String,
 }
 
 impl Reducible for Parser {
@@ -189,6 +191,11 @@ impl Reducible for Parser {
             ParseAct::CacheBlog(blog) => (*Rc::make_mut(&mut self)).insert(blog.meta.id, blog),
             ParseAct::MoreBlogMeta => (*Rc::make_mut(&mut self)).load_meta(ITEMS_PER_PAGE),
             ParseAct::BlogPath(paths) => (Rc::make_mut(&mut self)).paths = paths,
+            ParseAct::ChangeDisplayMode => match &self.display as &str {
+                "gridCard" => (Rc::make_mut(&mut self)).display = "listTile".into(),
+                "listTile" => (Rc::make_mut(&mut self)).display = "gridCard".into(),
+                _ => {}
+            },
         }
         self
     }
@@ -210,6 +217,7 @@ impl Parser {
             },
             order: Order::Dec,
             parsed: false,
+            display: "gridCard".into(),
         }
     }
 

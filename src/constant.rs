@@ -4,7 +4,6 @@ pub enum Modes {
     Development(log::Level),
     Release,
 }
-
 pub const ITEMS_PER_PAGE: u64 = 12;
 pub const MODE: Modes = Modes::Development(log::Level::Trace);
 

@@ -56,6 +56,7 @@ impl Component for PostList {
             .link()
             .context::<ParseActContext>(Callback::noop())
             .expect("Parser Context not found");
+        let parse = parser.clone();
         let link = ctx.link().clone();
         let all_pages = parser.all_page();
         let total_pages = parser.total_page();
@@ -63,8 +64,22 @@ impl Component for PostList {
             parser.dispatch(ParseAct::MoreBlogMeta);
             link.send_message(Msg::LoadPageUpdate);
         });
+        let view = if &parse.display == "gridCard" {
+            "List View"
+        } else {
+            "Grid View"
+        };
+        let link = ctx.link().clone();
+        let changemode = Callback::from(move |_| {
+            parse.dispatch(ParseAct::ChangeDisplayMode);
+            link.send_message(Msg::PageUpdated);
+        });
 
         html! {
+            <>
+            <button onclick={changemode} class="button is-white right" >
+                { view }
+            </button>
             <div class="section container">
                 { self.view_posts(ctx) }
                 <Pagination
@@ -84,6 +99,7 @@ impl Component for PostList {
                 }
             }
             </div>
+            </>
         }
     }
 }
@@ -95,6 +111,7 @@ impl PostList {
             .expect("Parser Context not found");
         let start_seed = (self.page - 1) * ITEMS_PER_PAGE;
         let mut cards = Vec::new();
+        let display = &parse.display;
         for ind in 0..ITEMS_PER_PAGE {
             let index = ind + start_seed;
             if index as usize > parse.ids.len() - 1 || parse.ids.is_empty() {
@@ -103,31 +120,44 @@ impl PostList {
             let id = parse.ids[index as usize];
             let meta = parse.get_meta(&id).unwrap();
             let item = html! {
-                <li class="list-item mb-5">
-                    <BlogCard id={id} title={meta.title.clone()} />
+                <li class="list-item mb-3">
+                    <BlogCard id={id} title={meta.title.clone() } display={display.clone()}/>
                 </li>
             };
             cards.push(item);
         }
         let mut cards = cards.into_iter();
-        html! {
-            <div class="columns">
-                <div class="column">
-                    <ul class="list">
-                        { for cards.by_ref().take(ITEMS_PER_PAGE as usize / 3) }
-                    </ul>
+        if display == "gridCard" {
+            html! {
+                <div class="columns">
+                    <div class="column">
+                        <ul class="list">
+                            { for cards.by_ref().take(ITEMS_PER_PAGE as usize / 3) }
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <ul class="list">
+                            { for cards.by_ref().take(ITEMS_PER_PAGE as usize / 3) }
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <ul class="list">
+                            { for cards }
+                        </ul>
+                    </div>
                 </div>
-                <div class="column">
-                    <ul class="list">
-                        { for cards.by_ref().take(ITEMS_PER_PAGE as usize / 3) }
-                    </ul>
-                </div>
+            }
+        } else if display == "listTile" {
+            html! {
                 <div class="column">
                     <ul class="list">
                         { for cards }
                     </ul>
                 </div>
-            </div>
+
+            }
+        } else {
+            html! {}
         }
     }
 }
