@@ -120,7 +120,7 @@ impl PostList {
             let id = parse.ids[index as usize];
             let meta = parse.get_meta(&id).unwrap();
             let item = html! {
-                <li class="list-item mb-3">
+                <li class="list-item mb-1">
                     <BlogCard id={id} title={meta.title.clone() } display={display.clone()}/>
                 </li>
             };

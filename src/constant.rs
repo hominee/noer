@@ -9,7 +9,7 @@ pub const MODE: Modes = Modes::Development(log::Level::Trace);
 
 // the Default value
 //pub const SUBPATH: &str = "/";
-pub const SUBPATH: &str = "demo/";
+pub const SUBPATH: &str = "noer/";
 
 // site info
 pub const ADMIN: &str = "Bruce Yuan";
