@@ -2,6 +2,8 @@
 
 [noer](https://github.com/homelyguy/noer) is a minimal static style blog template, which is good choice for those who prefer **Markdown**, **static site**, **Web-Assembly**.
 
+See [demo site](https://homelyguy.github.io/noer/)
+
 # How To Use
 there are some requirements to be satisfied before we use it.
 
