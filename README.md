@@ -1,6 +1,6 @@
 # What's Noer
 
-[noer](https://github.com/homelyguy/noer) is a minimal static style blog template, which is good choice for those who prefer **Markdown**, **static site**, **Web-Assembly**.
+[noer](https://github.com/homelyguy/noer) is a minimal, elegant and content-orientated static style blog CMS for those who prefer **Markdown**, **static site**, **Web-Assembly**. Markdown-based, simple to use; Static Style, github-pages supported, easy to deploy, serve and maintain; No JS/CSS/HTML touched; It makes content management Simple and Efficint.
 
 See [demo site](https://homelyguy.github.io/noer/)
 
