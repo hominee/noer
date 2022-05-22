@@ -1,0 +1,94 @@
+---
+title: Advanced Programming tips: Move, Clone, Copy
+published: true
+tag: 
+ - Low-level Programming
+ - System Programming 
+ - Clone/DeepCopy
+---
+
+# Advanced Programming tips: Move, Clone, Copy
+
+## Intro
+For any Programming like `C/C++`, `Rust`, `Java`, `Python`, the operation `Move`, `Clone`, and `Copy` matters in the view of performance, energy, momery-safety. 
+
+## Move
+### C/C++/Rust
+
+For C++, `Move` is achieved via `std::move` module, 
+```c++
+std::vector<std::string> vec;
+int s = "hello";
+vec.push_back(std::move(s));
+```
+after execution `s` is still valid but its value is not specfied as the pointer does not point anywhere.
+
+Things are a lot easy for Rust, thanks to the ownership mechanism, the example above could be neat like this.
+```rust
+let mut vec = Vec::new();
+let s = "hello";
+vec.push(s);
+```
+the memory of `s` in stack secotr gets dropped as long as `push` gets called, access to `moved` value is not allowed in Rust.
+And we can override the `=` operator with `std::move` to achieve the same syntax of Rust.
+```C++
+std::string& operator=(std::string&& other) {
+     return std::move(other);
+}
+```
+So we can with some confidence say that Rust will outperform C++ in memory-saving and performance.
+
+### for Other languages
+
+  Most of them are built-in with garbage collector, the memory manager will reclaim or release the momery automaticly. So most of your time you do not have to touch it. 
+
+So let's dig deeper, what does `GC` do when a `Move` happens? About all, a little background of `GC` is needed. the procedure of how `GC` works:
+1) Marking (not happens here, since it just mark living objects)
+2) Relocating (not happens here, it updates the reference of the living objects before compacting them) 
+3) Compacting (**Happends Here**, it release the dead memory and move the marked living objects to the freed memory segment)
+
+Another interesting exception is that `GC` will ignore `Move` if the object exceeds certain size for the sake of massive costs, e.g, GB-scale vector, very long buffer.
+
+## Clone & Copy
+For some neat, well-aligned(in memory layout sense) data such as `int` `double` `pointer`, they are `Copy`.  
+For compounded, complex data such as class, struct, they are not Copy, but you can clone them if necessary once `Clone` is implemented.
+the demarcation between `Clone` and `Copy` are vague, to put it simple, `Clone` consists of many memory `Copy`. 
+Always remember that for most of the case, it's wise to not clone an object unless it's necessary. why? Because, `Clone` is a expensive operation that surly have an impact on performance, energy, and memory, even causing unexpected memory bugs. 
+In assemble language code level, cloning is a series of memory operation: memory reclaim and data assignment. 
+
+### C/C++/Rust
+`Clone` in C/C++ is a little complicated owing to inheritance, polymorphism and etc. But we are not ganna to touch these topics and limited to the basics. 
+In general, There are two ways to clone an object:
+- Copy Constructor 
+```c++
+std::string s = "hello";
+std::string s2 = copy(s);
+```
+the `copy` function will call the constructor of `std::string` make a copy.
+
+- Assignment Operator
+```c++
+class AClass {
+	int a;
+	std::string s;
+	... 
+	// copy assignment operator
+	AClass& operator=(const AClass &rhs) {
+			this->a = rhs.a;
+			this->s = rhs.s;
+	};
+}
+
+AClass a{0, "hello"};
+AClass cloned = a;
+```
+In short, cloning an object is a series of `Copy`. 
+
+In rust, `Clone` is a trait that needs implemented which take a shared reference as input and output a value. 
+```rust 
+pub trait Clone {
+	fn clone(&self) -> Self;
+}
+```
+
+For the higher level language like `JS`/`Java`/`Python` and etc. that built-in with `GC`, `Clone` overlaps, to some degree, with `Copy`, to be more clear, `Clone` often refers to `DeepCopy`, and make an identical copy of the original underlaying data, put it into another place. The cloned objects has the same inner data, but differs in memory address. 

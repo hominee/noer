@@ -1,0 +1,92 @@
+---
+title: Dance With	Rust And Python 2 Rust Interface PyO3
+published: true
+tag: 
+ - Low-level Programming
+ - Python  
+ - Rust  
+ - PyO3
+ - FFI
+---
+
+# Dance With Rust And Python 2 Rust Interface PyO3
+
+The Foeign Function Interface(FFI) build an bridge at memory level to interact with other programming language. 
+
+
+In convention, Rust library should serve as a hyper that does the most load-heavy and expensive job, and provides the low layer APIs externally, for which rust is adopted here.  
+Calculation of Fibnacci number of `n` becomes expensive exponentially as `n` increase, For the sake of simplicity, we will write an module fulfill that.
+
+Project Setting Up, create files as following:
+```
+├── Cargo.toml
+├── README.md
+├── demo
+│ ├── __init__.py
+├── setup.py
+├── src
+│ ├── fib_calcs
+│ │ ├── fib_number.rs
+│ │ ├── fib_numbers.rs
+│ │ └── mod.rs
+│ ├── lib.rs
+```
+
+Implement the calculation:
+```rust
+// src/fib_number.rs
+use pyo3::prelude::pyfunction;
+
+#[pyfunction]
+pub fn cal(n: u32) -> u64 {
+	match n {
+		0 => 0,
+		1|3 => 1,
+		_ => cal(n-1) + cal(n-2)
+	}
+}
+
+// src/fib_numbers.rs
+use pyo3::prelude::pyfunction;
+use create::fib_calcs::fib_number::cal;
+
+#[pyfunction]
+pub fn cals(n: Vec<u32>) -> Vec<u64> {
+	n.into_iter()
+	 .map(|e| cal(e))
+	 .collect()
+}
+
+// src/fib_calcs/mod.rs
+pub mod fib_number;
+pub mod fib_numbers;
+```
+With all that code, we basically enable the module have the API to calculate fibnacci number(s).
+If you wanna see how the macros `pyfunction` expands the function `cal`, `cals`, you can use `cargo expand`(`cargo-expand` must be installed) to unfold the code it generates before compilation.
+One notable thing you need to know is that the macros will generate a function prefixed with `__pyo3_get_function_`,
+
+In order to make these API externally, export them in `src/lib.rs`
+```rust 
+mod fib_calcs;
+
+use fib_calcs::fib_number::__pyo3_get_function_cal;
+use fib_calcs::fib_numbers::__pyo3_get_function_cals;
+// pub mod fib_numbers;
+
+#[pymodule]
+fn demo(_py: Python, m: &PyModule) ->  PyResult<()> {
+ m.add_wrapped(wrap_pyfunction!(cal));
+ m.add_wrapped(wrap_pyfunction!(cals);
+ Ok(())
+}
+```
+
+Okay, So far so good, now let's test it.
+```bash
+pip install <path-to-project>@demo
+
+from demo import cal, cals 
+cal(17)
+cals([7,8,9])
+```
+If you see the result, then it works as expected.  
