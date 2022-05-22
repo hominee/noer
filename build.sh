@@ -4,5 +4,5 @@ path=$(cat src/constant.rs | grep SUBPATH | grep ^pub | sed "s/^.*=//g" | sed "s
 target=$( echo $path | sed "s/\///g") 
 [ ! -z $path ] && sed -i "s@<base data-trunk-public-url \/.*>@<base data-trunk-public-url \/$target\/>@g" index.html || sed -i "s@<base data-trunk-public-url \/.*>@<base data-trunk-public-url \/>@g" index.html 
 [ ! -z $path ] && rm -rf $target dist/ 
-[ ! -z $path ] && trunk build --public-url $path --release || trunk build --release && touch dist/.nojekyll
+[ ! -z $path ] && trunk build --public-url $path --release || trunk build --release 
 [ ! -z $path ] && mv dist/ $target && touch $target/.nojekyll 
