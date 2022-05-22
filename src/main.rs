@@ -89,6 +89,19 @@ impl Component for Model {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        let dom_parser = web_sys::DomParser::new().unwrap();
+        let mut footer = Vec::new();
+        let input_str = format!("<div>{}</div>", constant::SITE_DESCRIPTION);
+        if let Ok(element) =
+            dom_parser.parse_from_string(&input_str, web_sys::SupportedType::TextHtml)
+        {
+            let eles = element.body().unwrap().children();
+            for ind in 0..eles.length() {
+                let node = eles.get_with_index(ind).unwrap();
+                let vnode = Html::VRef(node.into());
+                footer.push(vnode);
+            }
+        }
         match self.state {
             FetchState::Success(_) => {
                 html! {
@@ -100,7 +113,9 @@ impl Component for Model {
                     </main>
                         <footer class="footer">
                             <div class="content has-text-centered">
-                              { constant::SITE_DESCRIPTION }
+                              {
+                                  html!{ for footer }
+                              }
                             </div>
                         </footer>
                     </BrowserRouter>

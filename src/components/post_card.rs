@@ -58,6 +58,8 @@ impl Component for BlogCard {
                         <Link<Route> classes={classes!("title", "is-5" )} to={Route::Post { id: meta.id, title: meta.title.clone() }}>
                             { &meta.title.replace("-", " ") }
                         </Link<Route>>
+                        <br />
+                        <time datetime={ meta.date.clone() } >{ &meta.date }</time>
                     </div>
                 </div>
             }
@@ -71,10 +73,15 @@ impl Component for BlogCard {
                                                 <img style="width:100%;height:100%"  src={meta.hero.clone()} alt="post's image" />
                                         </figure>
                                 </div>
-                                <div class="level-item">
-                                    <Link<Route> classes={classes!("title", "is-5" )} to={Route::Post { id: meta.id, title: meta.title.clone() }}>
-                                        { &meta.title.replace("-", " ") }
-                                    </Link<Route>>
+                                <div class="column">
+                                    <div class="level-item">
+                                        <Link<Route> classes={classes!("title", "is-5" )} to={Route::Post { id: meta.id, title: meta.title.clone() }}>
+                                            { &meta.title.replace("-", " ") }
+                                        </Link<Route>>
+                                    </div>
+                                    <div class="level-item mt-2" style="display: block">
+                                        <time datetime={ meta.date.clone() } >{ &meta.date }</time>
+                                    </div>
                                 </div>
                         </div>
                     </div>

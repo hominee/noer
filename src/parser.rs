@@ -217,7 +217,7 @@ impl Parser {
             },
             order: Order::Dec,
             parsed: false,
-            display: "gridCard".into(),
+            display: "listTile".into(),
         }
     }
 

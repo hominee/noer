@@ -5,6 +5,7 @@ pub struct BlogMeta {
     pub id: u64,
     pub title: String,
     pub timestamp: u64,
+    pub date: String,
     pub path: PathBuf,
     pub hero: String,
 }
@@ -27,6 +28,7 @@ impl BlogMeta {
             id: 0,
             path: PathBuf::new(),
             timestamp: 0,
+            date: "".into(),
             title: "".into(),
             hero: "".into(),
         }
@@ -59,6 +61,7 @@ impl BlogMeta {
             const UNITS: [u64; 6] = [365 * 24 * 3600, 30 * 24 * 3600, 24 * 3600, 60 * 60, 60, 1];
             // if path is matched
             if let Some(cap) = pat.captures(file_name_str) {
+                let date = cap[1].into();
                 cap[1]
                     .split(|c: char| !c.is_ascii_digit())
                     .enumerate()
@@ -85,6 +88,7 @@ impl BlogMeta {
                     title: cap.name("title").unwrap().as_str().into(),
                     path,
                     timestamp: sum,
+                    date,
                     hero: "".into(),
                 };
                 meta.get_hash();
