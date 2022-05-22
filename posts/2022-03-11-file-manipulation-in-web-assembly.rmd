@@ -1,0 +1,97 @@
+---
+title: File Manipulation In Web Assembly
+published: true
+tag: 
+ - File Manipulation
+ - Read & Write
+ - Web-Assembly
+ - Browser
+---
+
+# File Manipulation In Web Assembly 
+
+We all know that web-assmebly own its fame for heavy job handling, what will make CPU load much lighter and faster than that do in other programming language especially in high level language. But in my development by far, it seems that developers trends not to manipulate file in `wasm`. There are many reasons, but as far as I am concerned, surly web-assmebly has its remarkable limitation:
+- Indirect Acccess, `wasm` module cannot access local file directly, browser api is required by which file reading, writing are achievable.
+
+you may wonder, why does the browser is so mean to prevent direct file access,  This is **Security** what matters in nowadays. it is just like an sandbox, isolated from our host machine, If we allow any program run in our system
+ arbitraty files, sooner or later, it would be a mine.  
+
+**However we can still dance with the cages.**
+
+## Browser Fetch
+
+One of the most frequent way to read a file is `fetch`,
+```rust 
+use wasm_bindgen::{JsCast, prelude::*; }
+use wasm_bindgen_futures::JsFuture;
+use js-sys::JsString;
+
+#[wasm_bindgen]
+pub fn fetch_file(url: &str) -> Option<JsString> {
+	let document = web_sys::window().expect("cannot access global window").document().expect("document not exits");
+	let promise = document.fetch_with_str(url);
+	// here we convert `Promise` to `Future` of Rust
+	// and await
+	let file = JsFuture::from(promise).await;
+	match file.dyn_into::<JsString>() {
+		Ok(s) => Some(s),
+		Err(_) => None
+	}
+}
+```
+
+it will do for some small files such as pictures, js scripts, css files in the the root directory where web server running, but for large files or files outside the root directory, it does not work.
+
+## Local File Access
+
+So for files to be uploaded, alternative way is needed.
+```html 
+<html>
+	<head>
+		<title>
+		  Local File Access
+		</title>
+		<script type="module" >
+		  import init, {reading} from "./pkg/demo.js";
+			document.file_process = async () => {
+        let file = document.getElementById("input-file").files[0];
+				reading(file);
+	    }
+		</script>
+	</head>
+	<body>
+		<input value="Select Local File" type="file" id="input-file">
+		<button onclick="file_process()">
+	</body>
+</html>
+```
+next we define our file processing function in wasm module,
+
+```rust 
+use wasm_bindgen::{JsCast, prelude::*; File }
+use wasm_bindgen_futures::JsFuture;
+use js-sys::JsString;
+
+#[wasm_bindgen]
+pub fn file_process(file: File) -> Option<JsString> {
+	let promise = file.text();
+	// here we convert `Promise` to `Future` of Rust
+	// and await
+	let file = JsFuture::from(promise).await;
+	match file.dyn_into::<JsString>() {
+		Ok(s) => Some(s),
+		Err(_) => None
+	}
+}
+```
+## Advanced Tips To Optimization
+
+I assume that many of you reading this care for performance and memory when referring to web-assembly. So there are some tips you can follow:
+
+- use `js_sys::JsValue` as possible, avoid data type in rust. Since `wasm` is like a virtual machine, any value from JS requires memory allocation and data copy or clone,  especially for long string like `File` or something like this is quite memory consuming and CPU-heavy. 
+In the example above, the returned `JsString` avoid cloning file content into wasm, if you return `Option<&str>` or `Option<String>` there gonna be huge memory cost.
+- use `substr` to access file content, why? 
+  - no data clone/copy 
+	- millisecond content access
+
+In my HDD machine, the speed to read a file could reach 500 M/s with single thread, its performance is reasonably expected to be better. 

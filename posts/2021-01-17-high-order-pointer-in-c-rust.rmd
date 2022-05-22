@@ -1,0 +1,113 @@
+---
+title: High Order Pointer in C And Rust
+published: true
+tag: 
+ - Low-level Programming
+ - System Programming 
+ - High Order Pointer
+ - Mutability/Immutability
+---
+
+# High Order Pointer in C And Rust
+
+The first time of learning high order pointer during my university, I can recall clearly, was a mess, especially the mixture of the syntax and operator, what made me confused for a long time. I hope the article will be of help  after you read through. 
+
+Okay, let's go down to the topic, there are many definitions to clarify what pointer is, what good is to use and etc, I would rather introduce it with hardware background instead.
+
+Image a country with fixed size territoty where built with many houses, and each house marked with an address number. If we step into that land, do something, we have to know about it before entering like how large the territoty measures, how many houses(or people) lives there or something like this, this is the meta data of the country which gives us a basical overview. 
+
+Okay so far so good, let's do the task. 
+- step 1: pass the customs
+- step 2: visit the address and do sth  
+- step 3: if thing gets done, get back; or get the next address and repeat step 2
+
+you can definitely make analogy bwtween the example above and program execution! We can know the basic parameters after buying a electric production like a laptop, the amount of RAM is like the size of the territoty, the **memory address** refers to the address of house. Some person live in a house, and some are rich and take up many houses, this is the **value**(primitive or complex data structure) stored in memory.
+
+Some house is not for people to live in and contains a house address for the visitor, this is where **high order pointer** comes in, the address it contains for the visitor is called **pointer** which is used to visit next house, if the next house also contains address or recursively, the pointer is called **high order pointer**.
+
+From now, it will make some sense to see the abstract definition of pointer:
+> memory address is where storing the address of an object in another object
+
+## Some Convention
+
+Almost of programmer are familiar with pointer in C. 
+```C 
+int number = 0;
+int *number_ptr = &number;
+int **number_high_order_ptr = &number_ptr;
+```
+variable `number` is a value, and take up 4 bytes in memory,
+`number_ptr` is a pointer where contains the memory address of `number` by which the value will be loaded at runtime,
+`number_high_order_ptr` is a high order pointer where contains the memory address of `number_ptr` by which the memory address of `number` will be loaded.  
+Some code are presented following to see for yourself:
+```C 
+int main() {
+	int number = 0;
+	int *number_ptr = &number;
+	int **number_high_order_ptr = &number_ptr;
+
+	printf("number value: %d, &number is %p\n", number, &number);
+	printf("number_ptr = %p, &number_ptr = %p\n", number_ptr, &number_ptr);
+	printf("number_high_order_ptr = %p, &number_high_order_ptr = %p\n", number_high_order_ptr, &number_high_order_ptr);
+}
+```
+
+It seems that Rust does not have an advocate to high order pointer as it makes dealing with pointer even more unsafe and unexpected, but we still can reproduce the similar situation above.
+```rust 
+fn main() {
+  let number: i32 = 0;
+  let number_ptr: *const i32 = &number;
+  let number_high_order_ptr: *const *const i32 = &number_ptr;       
+  println!("number = {}, &number = {:p}", number, &number);
+  println!(
+      "number_ptr = {:p}, &number_ptr = {:p}",
+      number_ptr, &number_ptr                                             
+  );                                                                      
+  println!(                                                               
+      "number_high_order_ptr = {:p}, &number_high_order_ptr = {:p}",
+      number_high_order_ptr, &number_high_order_ptr                       
+  );  
+}
+```
+
+Another important application of pointer worthy talking is passing pointer as function parameter if you have a little background over memory management.
+To put it simple, for code:
+```c 
+// increase the variable by 1
+void increase_one(int i) {
+	i ++;
+}
+
+int main() {
+	int number = 0;
+	increase_one(number);
+}
+```
+**We know it does not work**! so here comes the question: why it is not functional, and how we implement the function correctly. 
+the problem lies in the parameter `int i` we passed into, because 
+
+**in C, functons are call by value.**
+
+this basically means that when you provide an argument to a function call, that value goes into the local variable that the corresponding function parameter holds. All local variables and function parameters are disposed once it get executed 
+
+this is to say, that what `increase_one(number)` do actually is just copy the value of number and assign it to a local variable, then increase the local variable by 1, and dispose it. No mutation happens! 
+
+the correct way to do is:
+```c 
+void increase_one(int *i) {
+	*i ++;
+}
+```
+
+Ananogously but much more neat code in Rust. passing a mutable referrence as parameter will do,
+```rust 
+fn increase_one(&mut number) {
+	number += 1;
+}
+```
+
+## Pointer In High Level Language
+The main demarcation between high level language and low level language, I think, is whether direct pointer is allowed or not. 
+C/C++ has some inherit defects in memory management, and Java is designed to avoid these problem and removepointer access for programmer. LoL, it is, en, in some sense, interesting.
+
+Most of creators of high level languages trend to create some kind of mechanism and restrict programmer's access to pointer to fix the memory defect, it is, of course, a good approach but at the cost of performance and redundance, limited application scenarios. 

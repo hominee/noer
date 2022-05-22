@@ -1,0 +1,64 @@
+---
+title: Advanced Programming tips: Memory Layouts
+published: true
+tag: 
+ - Low-level Programming
+ - System Programming 
+ - Memory layout
+ - Memory Optimization
+---
+
+# Advanced Programming tips: Memory Layouts
+
+When we compile the debugged code, the compiler will translate the source code to assembly language, then machine code, linker will link all instructions and datas finally to make a executable binary. 
+Here, Today, we are talking a bit about the memory layout the linker shapes. In general, the compiled binary takes similar memory layout as following figure  shows.
+
+![MemoryLayout](../assets/memoryLayoutC.jpg)
+
+This basically represents the structure of a program the linker forms. 
+It seems weird the first sight I see it, why it starts with high address and ends with low address, and the stack sector and heap sector approach together and so on.   
+
+As a matter of facts, I really have a ideal why it is designed to be like this, however I think, maybe we can apprehend its role each part plays during execution.
+
+**Text Sector**: A read-only place to store machine code, string literal and constant data. it will be loaded to memory when the program starts, available thorought the runtime.
+
+**Data Sector**: Data container used during execution. The data can be initialized or uninitialized. it also can be dynamic what will be allocated and de-allocated at runtime, or static what allocated by the assembler, won't be de-allocated.  
+
+**Heap Sector**: A place for dynamic memory allocation, the memory address grows if allocation required. 
+
+**Stack Sector**: Container for Local variables, function parameter, the memory address decreases if allocation required. 
+
+**Argv/Environ Sector**: Container to acesss to the command-line parameters and environment variables.
+
+## Protential Memory Bugs
+
+I assume that most of you have heard memory issues like `overflow`, `segfaults` and etc. But have you ever wonder how that problem happens, we can get into more details here.
+
+- **Stack Overflow**: The stack sector keeps grows and reach the heap sector. There are many reasons, local variables are too large, or cumulative size exceeds and so on, but foremost, the reclaimed memory exceeds the available ones in the hardware. 
+
+- **Buffer Overflow**: Try to access memory address beyond. the simplest example could be that get the second element of singleton vecotr.  
+
+- **No-Free/Double-Free/Invalid-Free**: The Heap sector doesn't free the object correctly. 
+
+- **Dangling Pointer**: Referring to a object whose memory is already freed. It could happens both in stack sector and heap sector. 
+
+- **Segment Fault**: Referring to a variable falls outside the sigment where the variable locates. It could happens both in stack sector and heap sector. 
+
+- **Data Race**: More than one thread mutates the same momery address. It could happens both in stack sector and heap sector. 
+
+## How Most of Programming Language refute Memory Bugs
+
+First of All, I would pessimisticly tell you that There is no way to refute memory bugs. There is a lot of stuff here to say that, but if you want know more, [Formal Language](https://en.wikipedia.org/wiki/Formal_language) is recommanded, and Godel's incompleteness theorems also imply mathematically.
+
+Okay but what mechanism has been adopted? Well 3 ways are out there historically.
+
+- **Programmer Manipulation**: the programmer decides when, where to reclaim and free memory. the quality of the code differs according to the programmer, and the more complex/large the program gets, the more bugs it contains. 
+  - C/C++
+
+- **Garbage Collector**: Used to automaticly mark and compact the living objects, free the dead objects. programmer has no control on pointers, but bugs still remains in some situations e.g multithreading, asynchronous runtime and etc.
+  - Java/JS/Python and other high level language
+
+
+- **Ownership System**: restricted access and mutability combined with borrow checking and lifetime to ensure, at the most cases, memory safety. 
+  - Rust
+

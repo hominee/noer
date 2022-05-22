@@ -1,0 +1,38 @@
+---
+title: A Free and Unlimited Translator
+published: true
+tag: 
+ - Translator
+ - Python
+ - google translator
+---
+
+# A Free and Unlimited Translator 
+
+Recently I found a pretty good python library that provides you free and unlimited translator, Here is the [library link](https://py-googletrans.readthedocs.io/en/latest/).
+Now We gonna use it to build a translator.
+
+## Pre-Requisite
+Some Dependencies must be specied before we get started.
+- Python must be installed, if not go to [page](https://www.python.org/about/gettingstarted/) for installation
+- pip must be installed, if not, use the following code:
+	``` bash
+	curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
+	```
+- InterNet access to google.com
+
+
+## Install Dependencies
+Install it from `PyPI`:
+``` python 
+pip install googletrans 
+```
+
+## Coding 
+Now let's code our python script to build a translator.
+
+- First of all, import the necessary library.
+```
+from googletrans import Translator
+```
+- According to the api of the 
