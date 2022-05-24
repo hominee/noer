@@ -13,7 +13,7 @@ tag:
 When we compile the debugged code, the compiler will translate the source code to assembly language, then machine code, linker will link all instructions and datas finally to make a executable binary. 
 Here, Today, we are talking a bit about the memory layout the linker shapes. In general, the compiled binary takes similar memory layout as following figure  shows.
 
-![MemoryLayout](../assets/memoryLayoutC.jpg)
+![MemoryLayout](/noer/assets/memoryLayoutC.jpg)
 
 This basically represents the structure of a program the linker forms. 
 It seems weird the first sight I see it, why it starts with high address and ends with low address, and the stack sector and heap sector approach together and so on.   

@@ -1,8 +1,10 @@
-posts/2021-01-17-high-order-pointer-in-c-rust.rmd
-posts/2021-02-08-dance-with-rust-and-python-pip-1-packaging-rust-with-pythons-pip.rmd
-posts/2021-02-08-dance-with-rust-and-python-pip-2-rust-interface-pyo3.rmd
-posts/2021-04-05-advanced-programming-tips-memory-layouts.rmd
-posts/2021-04-07-advanced-programming-tips-move-clone-copy.rmd
-posts/2021-10-10-demo.rmd
 posts/2022-03-11-file-manipulation-in-web-assembly.rmd
-posts/2022-04-19-A-free-and-unlimited-translator.rmd
+posts/2022-01-20-minimal-markdown-blog-CMS-for-static-site.rmd
+posts/2021-10-10-demo.rmd
+posts/2021-07-23-how-to-build-app-with-dyer.rmd
+posts/2021-04-07-advanced-programming-tips-move-clone-copy.rmd
+posts/2021-04-05-advanced-programming-tips-memory-layouts.rmd
+posts/2021-02-08-dance-with-rust-and-python-pip-2-rust-interface-pyo3.rmd
+posts/2021-02-08-dance-with-rust-and-python-pip-1-packaging-rust-with-pythons-pip.rmd
+posts/2021-01-17-high-order-pointer-in-c-rust.rmd
+posts/2020-04-19-A-free-and-unlimited-translator.rmd

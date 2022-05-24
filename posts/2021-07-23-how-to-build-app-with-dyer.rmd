@@ -1,0 +1,250 @@
+---
+title: How to build app with dyer
+published: true
+tag: 
+ - dyer
+ - dyer-cli
+ - crawler & spider
+ - scrapy
+ - sample app
+---
+
+# How to build app with dyer
+
+This demo project walks you through getting all quotes of the [site](https://quotes.toscrape.com/)
+**Note that**:  all source code can be found at my [github](https://github.com/homelyguy/dyer/master/examples)
+
+Dyer is a pure rust library, designed for reliable, flexible and fast Request-Response based service, including data processing, web-crawling and so on, providing some friendly, flexible, comprehensive features without compromising speed.
+
+## Prequisites 
+- As usual, rust tool-chain must be installed and put these tools in `PATH`
+
+- [dyer-cli](https://github.com/homelyguy/dyer-cli) installation, it is a handy tool to develop with dyer.
+	```rust 
+	$ cargo install dyer-cli
+	$ dyer --help
+	```
+
+- Since `dyer` uses `openssl` for network connections, so openssl library is required in order to compile it.
+	```bash 
+	# for debian-base OS
+	$ sudo apt install pkg-config libssl-dev
+
+	# for Arch
+	$ sudo pacman -S pkg-config openssl
+
+	# for MacOS
+	$ brew install openssl
+	```
+
+	- for Windows, if you have `Visual Studio` installed, then the library is included somewhere in your computer.
+		the recommanded way to install is manually installation, download the [openssl-dev](https://mirror.firedaemon.com/OpenSSL/openssl-1.1.1k.zip) file and unzip it, export the `x64` or `x86` as `OPENSSL_DIR` 
+
+## Configuration
+
+we use `dyer-cli` to create a project.
+```bash 
+$ dyer new demo		
+project ht is created successfully!
+
+$ cd dyer/
+```
+`dyer new` command helps you initialize a project with log level Info, other log levels vares from Error, Warn, Info, Debug, and Trace, and its structure is
+``` bash 
+|___Cargo.toml
+|___Readme.md
+|___data/
+|___data/tasks/
+|___src/
+    |___src/entity.rs
+    |___src/affix.rs
+    |___src/actor.rs
+    |___src/parser.rs
+    |___src/middleware.rs
+    |___src/pipeline.rs
+    |___src/bin/
+```
+inside of each file, there are some lines of comments illustrating the basic function and usage.
+
+add dependencies to `Cargo.toml`
+```toml
+dyer = { version = "3.2" }
+serde = { version = "*", features = ["derive"] }
+tokio = { version = "0.2", features = ["rt-threaded", "macros"]}
+simple_logger = "*"
+select = "*"
+serde_json = "*"
+log = "*"
+```
+then run `dyer check`
+the command will generate a `src/bin/demo.rs` file accroding to your project, then run `cargo check` in the project.
+if you change the project late, re-run this command will re-generate it.
+
+## Coding 
+we must setup `actor.rs` first, this is the entry of `dyer`, requests start from here.
+```rust 
+// src/actor.rs
+
+#[actor]
+pub struct MyActor {}
+
+#[dyer::async_trait]
+impl Actor<Entities, Aff> for MyActor {
+    // create an instance
+    async fn new() -> Self {
+        Self {}
+    }
+
+    // preparation before opening actor
+    async fn open_actor(&mut self, _app: &mut App<Entities>) {}
+
+    // `Task` to be executed when starting `dyer`. Note that this function must reproduce a
+    // non-empty vector, if not, the whole program will be left at blank.
+    async fn entry_task(&mut self) -> Result<Vec<Task>, Box<dyn std::error::Error>> {
+        // all infomation needed is uri and parser
+        let task = Task::get("https://quotes.toscrape.com")
+            .parser(parse_quote)
+            .extensions(3i32)
+            .body(Body::empty(), "quote".into())
+            .unwrap();
+        println!("haha {:?}", task);
+        Ok(vec![task])
+    }
+
+    // the generator of `Affix`
+    // `dyer` consume the returned `Request`, generate a `Response` fed to the closure
+    // to generate a `Affix`
+    async fn entry_affix(&mut self) -> Option<Aff> {
+        None
+    }
+
+    // preparation before closing actor
+    async fn close_actor(&mut self, _app: &mut App<Entities>) {}
+}
+```
+Once the actor is completed, then dyer will start downloading the uri html, parser is called when download finished. 
+```rust 
+// src/parser.rs
+use crate::entity::*;
+use dyer::dyer_macros::parser;
+use dyer::*;
+use dyer::{component::Buf, Parsed, Response, Task};
+
+#[parser]
+pub fn parse_quote(res: Response) -> Parsed<Entities> {
+    let mut r = Parsed::new();
+    if res.body.is_empty() {
+        return r;
+    }
+    let mut quotes = Vec::new();
+    let s = std::str::from_utf8(res.body.bytes()).unwrap();
+    let doc = select::document::Document::from(s);
+    for node in doc.find(select::predicate::Class("quote")) {
+        let text = node
+            .find(select::predicate::Class("text"))
+            .next()
+            .unwrap()
+            .text();
+        let author = node
+            .find(select::predicate::Class("author"))
+            .next()
+            .unwrap()
+            .text();
+        let tags = node
+            .find(select::predicate::Class("tag"))
+            .map(|tag| tag.text())
+            .collect::<Vec<String>>();
+        let item = Quote { text, author, tags };
+        quotes.push(Entities::Quote(item));
+    }
+    r.entities = quotes;
+
+    // follow the next page if exists
+    let mut next_node = doc.find(select::predicate::Class("next"));
+    if let Some(nd) = next_node.next() {
+        // next page exists
+        let next_url = nd
+            .find(select::predicate::Name("a"))
+            .next()
+            .unwrap()
+            .attr("href")
+            .unwrap();
+        let task = Task::builder()
+            .uri(format!("https://quotes.toscrape.com{}", next_url))
+            .parser(parse_quote)
+            .body(Body::empty(), "quote".into())
+            .unwrap();
+        r.task.push(task);
+    }
+    r
+}
+```
+If additional processing is needed for the parsed results, you can fulfill this at `src/middleware.rs`
+
+Okay, we parsed the html file and get the quotes, now we need to store them.
+``` rust 
+// src/pipeline.rs
+
+use crate::entity::Entities;
+use dyer::dyer_macros::pipeline;
+use dyer::App;
+
+use std::fs::OpenOptions;
+use std::io::{LineWriter, Write};
+use std::sync::Once;
+
+#[pipeline(initializer)]
+pub async fn open_file<'r>(_app: &mut App<Entities>) -> Option<std::fs::File> {
+    let path = "result.json";
+    let file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .append(true)
+        .open(path)
+        .unwrap();
+    Some(file)
+}
+
+// store Entities into file
+#[pipeline(process_entity)]
+pub async fn store_item(mut items: Vec<Entities>, app: &mut App<Entities>) {
+    let mut ser_items = Vec::new();
+    while let Some(Entities::Quote(item)) = items.pop() {
+        let s = serde_json::to_string(&item).unwrap() + "\n";
+        ser_items.push(s);
+    }
+    let stream = ser_items.join("");
+    let mut writer = LineWriter::new(open_file(app).await.unwrap());
+    writer.write(&stream.as_bytes()).unwrap();
+}
+
+// open a static file `result.json`
+#[pipeline(initializer)]
+pub async fn opener<'r, E>(_app: &'r mut App<E>) -> Option<&'static std::fs::File>
+where
+    E: Sized,
+{
+    static INIT: Once = Once::new();
+    static mut VAL: Option<std::fs::File> = None;
+    unsafe {
+        INIT.call_once(|| {
+            let path = "result.json";
+            let file = OpenOptions::new()
+                .create(true)
+                .write(true)
+                .append(true)
+                .open(path)
+                .unwrap();
+            VAL = Some(file);
+        });
+        VAL.as_ref()
+    }
+}
+```
+Congratulations, it is almost Done! now you can check the projects and debug before compiling.
+
+This is the basic procedure to use dyer.
+
+## Some Tips
+- if you want database support, like `SQL` database(`SQLite`, `PostgreSQL`, `MySQL` ) or `NoSQL` database( `MongoDB`) refer to the [example](https://github.com/homelyguy/dyer/tree/master/examples) 
+- More reference goes to the [cookbook](https://homelyguy.github.io/dyer/)
