@@ -1,0 +1,66 @@
+---
+title: A Free and Unlimited Translator
+published: true
+tag: 
+ - Translator
+ - Python
+ - google translator
+---
+
+# A Free and Unlimited Translator 
+
+Recently I found a pretty good python library that provides you free and unlimited translator, Here is the [library link](https://py-googletrans.readthedocs.io/en/latest/).
+Now We gonna use it to build a translator.
+
+## Pre-Requisite
+Some Dependencies must be specied before we get started.
+- Python must be installed, if not go to [page](https://www.python.org/about/gettingstarted/) for installation
+- pip must be installed, if not, use the following code:
+	``` bash
+	curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python get-pip.py
+	```
+- InterNet access to google.com
+
+
+## Install Dependencies
+Install it from `PyPI`:
+``` python 
+pip install googletrans 
+```
+
+## Coding 
+Now let's code our python script to build a translator.
+
+- First of all, import the necessary library.
+```
+from googletrans import Translator
+```
+## Basic Usage
+ If source language is not given, google translate attempts to detect the source language.
+
+```python	
+>>> from googletrans import Translator
+>>> translator = Translator()
+>>> translator.translate('안녕하세요.')
+# <Translated src=ko dest=en text=Good evening. pronunciation=Good evening.>
+
+>>> translator.translate('안녕하세요.', dest='ja')
+# <Translated src=ko dest=ja text=こんにちは。 pronunciation=Kon'nichiwa.>
+
+>>> translator.translate('veritas lux mea', src='la')
+# <Translated src=la dest=en text=The truth is my light pronunciation=The truth is my light>
+``` 
+
+Customize service URL
+
+You can use another google translate domain for translation. If multiple URLs are provided it then randomly chooses a domain.
+
+``` python
+>>> from googletrans import Translator
+>>> translator = Translator(service_urls=[
+      'translate.google.com',
+      'translate.google.co.kr',
+    ])
+```
+
+more detail to see its documentation [here](https://py-googletrans.readthedocs.io/en/latest/)

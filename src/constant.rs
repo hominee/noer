@@ -13,11 +13,11 @@ pub const SUBPATH: &str = "noer/";
 
 // site info
 pub const ADMIN: &str = "Bruce Yuan";
-pub const SITE_NAME: &str = "Demo Site";
+pub const SITE_NAME: &str = "Homely See Around";
 pub const LOGO_PIC: &str = "/assets/logo.png";
 pub const AVATR_PIC: &str = "/assets/github.png";
 pub const SITE_DESCRIPTION: &str = "<strong>Welcome everybody,</strong> glad to see you here!
-Here are awesome blogs of my <a href=\"https://example.com/path\">website</a>. 
+Here are awesome blogs of my <a href=\"https://github.com/homelyguy\">website</a>. 
 enjoy yourself here.
   ";
 

@@ -6,3 +6,7 @@ target=$( echo $path | sed "s/\///g")
 [ ! -z $path ] && rm -rf $target dist/ 
 [ ! -z $path ] && trunk build --public-url $path --release || trunk build --release 
 [ ! -z $path ] && mv dist/ $target && touch $target/.nojekyll 
+[ $1 = "--gitpage" ] && echo "compiled for Github Pages at docs/" && { 
+	rm -rf docs
+	mv $target docs 
+}

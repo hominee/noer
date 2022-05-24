@@ -338,7 +338,7 @@ impl Parser {
                         let blog = str2blog(&buf, meta);
                         if let Some(Blog { ignored: false, .. }) = blog {
                             let blog = blog.unwrap();
-                            self.inner.indexs.push((blog.meta.timestamp, meta.id));
+                            self.inner.indexs.push((meta.id, blog.meta.timestamp));
                             self.inner.blogs.insert(meta.id, blog);
                             self.inner.len += 1;
                             assert_eq!(self.inner.indexs.len(), self.inner.len);
